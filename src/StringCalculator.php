@@ -9,17 +9,13 @@ class StringCalculator
     }
 
     // TODO: String Calculator Kata
-    public function Add(string $numbers): int
+    public function add(string $numbers): int
     {
         if ($this->isEmpty($numbers)) {
             return 0;
         }
 
-        if ($this->isDelimeterDeclared($numbers[0])) {
-            return $this->delimeterCleanedArray($numbers);
-        }
-
-        $numbersArray = $this->cleanArray($numbers, ",");
+        $numbersArray = $this->cleanArray($numbers);
 
         if ($this->isOnlyOneNumber($numbersArray)) {
             return (int)$numbersArray[0];
@@ -74,34 +70,47 @@ class StringCalculator
     }
     /**
      * @param string $numbers
-     * @param string $delimiter
+     * @param string $delimiters
      * @return string[]
      */
-    public function cleanArray(string $numbers, string $delimiter): array
+    public function cleanArray(string $numbers): array
     {
-        // Reemplazamos los saltos de línea por el delimitador correcto
-        $numbers = str_replace("\n", $delimiter, $numbers);
-        // Ahora explotamos usando el delimitador proporcionado (puede ser coma o el delimitador especial)
-        $numbersArray = explode($delimiter, $numbers);
-        return $numbersArray;
+        list($delimiters, $numbers) = $this->obtainDelimiter($numbers);
+
+        $delimitersPattern = '/' . implode('|', array_map('preg_quote', $delimiters)) . '/';
+
+        $numbers = preg_replace($delimitersPattern, ",", $numbers);
+
+        $numbers = preg_replace('/,{2,}/', ",", trim($numbers, ","));
+
+        return array_filter(explode(",", $numbers), fn($value) => $value !== "");
     }
+
+
 
     /**
      * @param string $input
      * @return array
      */
-    public function obtainDelimeter(string $input): array
+    public function obtainDelimiter(string $input): array
     {
-        // Dividimos la cadena de entrada en líneas
-        $lines = explode("\n", $input);
+        if (!str_starts_with($input, "//")) {
+            return [[",", "\n"], $input];
+        }
 
-        // Extraemos el delimitador de la primera línea, después de "//"
-        $delimiter = substr($lines[0], 2, 1);  // Extrae el delimitador de "//[delimitador]"
-        // El segundo valor será la línea con los números
-        $numbers = implode("\n", array_slice($lines, 1));
+        $endOfDelimiters = strpos($input, "\n");
+        $delimiterPart = substr($input, 2, $endOfDelimiters - 2);
+        $numbers = substr($input, $endOfDelimiters + 1);
 
-        return [$delimiter, $numbers];
+        preg_match_all('/\[(.*?)\]/', $delimiterPart, $matches);
+
+        $delimiters = !empty($matches[1]) ? $matches[1] : [$delimiterPart];
+
+        $delimiters[] = "\n";
+
+        return [$delimiters, $numbers];
     }
+
 
     /**
      * @param $numbers
@@ -118,9 +127,9 @@ class StringCalculator
      */
     public function delimeterCleanedArray(string $numbers): mixed
     {
-        list($delimiter, $numbers) = $this->obtainDelimeter($numbers);
+        list($delimiters, $numbers) = $this->obtainDelimiter($numbers);
 
-        $numbersArray = $this->cleanArray($numbers, $delimiter);
+        $numbersArray = $this->cleanArray($numbers, $delimiters);
         return $this->getSum($numbersArray);
     }
 }
