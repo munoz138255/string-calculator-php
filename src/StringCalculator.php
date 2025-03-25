@@ -21,6 +21,7 @@ class StringCalculator
             return (int)$numbersArray[0];
         }
 
+        $numbersArray = $this->validateNumbers($numbersArray);
         return $this->getSum($numbersArray);
     }
 
@@ -44,33 +45,29 @@ class StringCalculator
 
     /**
      * @param array $numbersArray
-     * @return int|mixed
+     * @return array
+     */
+    function validateNumbers(array $numbersArray): array
+    {
+        $negativeNumbers = array_filter($numbersArray, fn($num) => (int)$num < 0);
+
+        if (!empty($negativeNumbers)) {
+            throw new \InvalidArgumentException("Negativos no soportados: " . implode(", ", $negativeNumbers));
+        }
+        return array_filter($numbersArray, fn($num) => (int)$num < 1000);
+    }
+
+    /**
+     * @param array $numbersArray
+     * @return int
      */
     public function getSum(array $numbersArray): int
     {
-        $sum = 0;
-        $negativeNumbers = [];
-
-        foreach ($numbersArray as $number) {
-            $currentNumber = (int)$number;
-
-            if ($currentNumber < 0) {
-                $negativeNumbers[] = $currentNumber; // Agregamos al array
-            }
-            if($currentNumber < 1000){
-                $sum += $currentNumber;
-            }
-        }
-
-        if (!empty($negativeNumbers)) {
-            throw new \InvalidArgumentException("negativos no soportados: " . implode(", ", $negativeNumbers));
-        }
-
-        return $sum;
+       return array_sum($numbersArray);
     }
+
     /**
      * @param string $numbers
-     * @param string $delimiters
      * @return string[]
      */
     public function cleanArray(string $numbers): array
@@ -85,9 +82,6 @@ class StringCalculator
 
         return array_filter(explode(",", $numbers), fn($value) => $value !== "");
     }
-
-
-
     /**
      * @param string $input
      * @return array
@@ -109,27 +103,5 @@ class StringCalculator
         $delimiters[] = "\n";
 
         return [$delimiters, $numbers];
-    }
-
-
-    /**
-     * @param $numbers
-     * @return bool
-     */
-    public function isDelimeterDeclared($numbers): bool
-    {
-        return $numbers === "/";
-    }
-
-    /**
-     * @param string $numbers
-     * @return int|mixed
-     */
-    public function delimeterCleanedArray(string $numbers): mixed
-    {
-        list($delimiters, $numbers) = $this->obtainDelimiter($numbers);
-
-        $numbersArray = $this->cleanArray($numbers, $delimiters);
-        return $this->getSum($numbersArray);
     }
 }
