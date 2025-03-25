@@ -11,8 +11,6 @@ final class StringCalculatorTest extends TestCase
 {
 
     private StringCalculator $stringCalculator;
-    // TODO: String Calculator Kata Tests
-
 
     protected function setUp(): void{
         parent::setUp();
@@ -108,9 +106,4 @@ final class StringCalculatorTest extends TestCase
 
         $this->assertEquals(23, $result);
     }
-
-
-
-
-
 }

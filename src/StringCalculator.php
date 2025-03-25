@@ -8,21 +8,13 @@ class StringCalculator
     {
     }
 
-    // TODO: String Calculator Kata
     public function add(string $numbers): int
     {
         if ($this->isEmpty($numbers)) {
             return 0;
         }
-
-        $numbersArray = $this->cleanArray($numbers);
-
-        if ($this->isOnlyOneNumber($numbersArray)) {
-            return (int)$numbersArray[0];
-        }
-
-        $numbersArray = $this->validateNumbers($numbersArray);
-        return $this->getSum($numbersArray);
+        $numbers = $this->cleanArray($numbers);
+        return $this->getSum($numbers);
     }
 
     /**
@@ -35,12 +27,44 @@ class StringCalculator
     }
 
     /**
-     * @param array $numbersArray
-     * @return bool
+     * @param string $numbers
+     * @return array
      */
-    public function isOnlyOneNumber(array $numbersArray): bool
+    public function cleanArray(string $numbers): array
     {
-        return count($numbersArray) === 1;
+        list($delimiters, $numbers) = $this->obtainDelimiter($numbers);
+
+        $delimitersPattern = '/' . implode('|', array_map('preg_quote', $delimiters)) . '/';
+
+        $numbers = preg_replace($delimitersPattern, ",", $numbers);
+
+        $numbers = preg_replace('/,{2,}/', ",", trim($numbers, ","));
+
+        $numbers = array_filter(explode(",", $numbers), fn($value) => $value !== "");
+        return $this->validateNumbers($numbers);
+    }
+
+    /**
+     * @param string $input
+     * @return array
+     */
+    public function obtainDelimiter(string $input): array
+    {
+        if (!str_starts_with($input, "//")) {
+            return [[",", "\n"], $input];
+        }
+
+        $endOfDelimiters = strpos($input, "\n");
+        $delimiterPart = substr($input, 2, $endOfDelimiters - 2);
+        $numbers = substr($input, $endOfDelimiters + 1);
+
+        preg_match_all('/\[(.*?)\]/', $delimiterPart, $matches);
+
+        $delimiters = !empty($matches[1]) ? $matches[1] : [$delimiterPart];
+
+        $delimiters[] = "\n";
+
+        return [$delimiters, $numbers];
     }
 
     /**
@@ -64,44 +88,5 @@ class StringCalculator
     public function getSum(array $numbersArray): int
     {
        return array_sum($numbersArray);
-    }
-
-    /**
-     * @param string $numbers
-     * @return string[]
-     */
-    public function cleanArray(string $numbers): array
-    {
-        list($delimiters, $numbers) = $this->obtainDelimiter($numbers);
-
-        $delimitersPattern = '/' . implode('|', array_map('preg_quote', $delimiters)) . '/';
-
-        $numbers = preg_replace($delimitersPattern, ",", $numbers);
-
-        $numbers = preg_replace('/,{2,}/', ",", trim($numbers, ","));
-
-        return array_filter(explode(",", $numbers), fn($value) => $value !== "");
-    }
-    /**
-     * @param string $input
-     * @return array
-     */
-    public function obtainDelimiter(string $input): array
-    {
-        if (!str_starts_with($input, "//")) {
-            return [[",", "\n"], $input];
-        }
-
-        $endOfDelimiters = strpos($input, "\n");
-        $delimiterPart = substr($input, 2, $endOfDelimiters - 2);
-        $numbers = substr($input, $endOfDelimiters + 1);
-
-        preg_match_all('/\[(.*?)\]/', $delimiterPart, $matches);
-
-        $delimiters = !empty($matches[1]) ? $matches[1] : [$delimiterPart];
-
-        $delimiters[] = "\n";
-
-        return [$delimiters, $numbers];
     }
 }
